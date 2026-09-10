@@ -1,0 +1,44 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  provider:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          path: plugin
+          persist-credentials: false
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: NousResearch/hermes-agent
+          ref: f6ddd89692dff1f900983a16208f39a1485a14eb
+          path: hermes
+          persist-credentials: false
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Prepare isolated Hermes environment
+        run: |
+          python -m venv "$RUNNER_TEMP/hermes-test-venv"
+          "$RUNNER_TEMP/hermes-test-venv/bin/python" -m pip install -e "$GITHUB_WORKSPACE/hermes[dev]"
+          echo "HERMES_SOURCE=$GITHUB_WORKSPACE/hermes" >> "$GITHUB_ENV"
+          echo "HERMES_PYTHON=$RUNNER_TEMP/hermes-test-venv/bin/python" >> "$GITHUB_ENV"
+          echo "HERMES_HOME=$RUNNER_TEMP/hermes-test-profile" >> "$GITHUB_ENV"
+      - name: Contract tests
+        run: bash plugin/scripts/test.sh
+      - name: Plugin validation
+        working-directory: hermes
+        run: |
+          "$HERMES_PYTHON" -m hermes_cli.main plugins validate "$GITHUB_WORKSPACE/plugin" --json
+          "$HERMES_PYTHON" -m hermes_cli.main plugins doctor "$GITHUB_WORKSPACE/plugin" --ci
