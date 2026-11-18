@@ -35,13 +35,15 @@ Ask Hermes to search for a topic, then read a result URL. You can also pair Octe
 
 ## Behavior
 
+The Hermes-side behavior below was checked against Hermes v0.23.2.
+
 - Search calls `POST https://api.octen.ai/search` and requests highlights without full-page content. Hermes rounds the number of results it asks for up to 10, 20, 50, or 100, the plugin sends that number to Octen as `count`, and Hermes returns only as many results as were requested.
 - Extract calls `POST https://api.octen.ai/extract` and requests Markdown. Hermes' `web_extract` tool passes at most 5 URLs per call; the plugin splits larger inputs into requests of at most 20 URLs. Successful pages and per-URL failures retain input order, and a failed request does not discard pages that succeeded. No query is sent, so Octen returns full page content.
 - Search timeout is 30 seconds; extraction timeout is 45 seconds per request.
 - The plugin reports every failure to Hermes as a failed call, never as an empty success: missing keys, invalid credentials, account access or balance errors, rate limits, network errors, and invalid API responses. Messages are short, for example `Octen returned HTTP 401. Check OCTEN_API_KEY.`, and never include raw error bodies or credentials.
 - Hermes continues to handle provider selection, caching, private/credential-bearing URL checks, and truncation of large pages.
 
-By default, Hermes does not pass a failed Octen call on as an error. It retries that call on its keyless free tier and, if that works, returns those results instead. Search results served this way carry `rescued_from: octen`, and `backend_error` holds the plugin's message. The next call goes to Octen again. To get the error instead, run:
+By default, Hermes does not pass a failed Octen call on as an error. It retries that call on its keyless free tier and, if that works, returns those results instead. Search results served this way carry `rescued_from: octen`, and `backend_error` contains the plugin's message. The next call goes to Octen again. To get the error instead, run:
 
 ```sh
 hermes config set web.keyless_rescue false
@@ -64,10 +66,15 @@ hermes config unset web.search_backend
 hermes config unset web.extract_backend
 ```
 
-Then disable or remove the plugin:
+Then disable the plugin to keep it installed but unloaded:
 
 ```sh
 hermes plugins disable web-octen
+```
+
+Or remove it completely:
+
+```sh
 hermes plugins remove web-octen
 ```
 
