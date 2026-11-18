@@ -10,5 +10,5 @@ provides_web_providers:
 requires_env:
   - name: OCTEN_API_KEY
     description: Octen API key for web search and extraction.
-    url: https://octen.ai
+    url: https://octen.ai/platform/api-keys
     secret: true

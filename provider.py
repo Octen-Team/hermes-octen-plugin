@@ -70,7 +70,7 @@ class OctenWebSearchProvider(WebSearchProvider):
             "env_vars": [{
                 "key": "OCTEN_API_KEY",
                 "prompt": "Octen API key",
-                "url": "https://octen.ai",
+                "url": "https://octen.ai/platform/api-keys",
             }],
         }
 
